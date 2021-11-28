@@ -1,6 +1,9 @@
 ﻿namespace Project
 {
-    public static class Logic
+    public class Logic
     {
+        private int Mode { get; }
+
+        private Logic(int mode) => Mode = mode;
     }
 }
