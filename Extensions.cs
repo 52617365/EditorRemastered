@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -9,9 +8,9 @@ namespace Project
     {
         private static bool CheckFormat(string? line) => !string.IsNullOrEmpty(line) && line.Contains(':');
 
-        private static bool IsEmail(string? line) => line.Contains('@');
+        private static bool IsEmail(string line) => line.Contains('@');
 
-        private static string[]? SplitByChar(this string? str, char character)
+        private static string[]? SplitByChar(this string str, char character)
         {
             try
             {
@@ -37,7 +36,6 @@ namespace Project
             return sb.ToString();
         }
 
-
         internal static string RemoveNumbers(this string str)
         {
             StringBuilder sb = new(str.Length);
@@ -48,7 +46,6 @@ namespace Project
 
             return sb.ToString();
         }
-
 
         internal static string RemoveLetters(this string str)
         {
@@ -61,56 +58,132 @@ namespace Project
             return sb.ToString();
         }
 
-
         internal static string? UsernamesToEmail(this string? str, string domain)
         {
             return CheckFormat(str) ? Edit(str!) : null;
-
 
             string Edit(string line)
             {
                 if (IsEmail(line)) return line;
 
                 // Line split
-                string[]? lp = line.SplitByChar(':');
+                string[]? userPass = line.SplitByChar(':');
 
-                return $"{lp}{domain}:{lp![1]}";
+                return $"{userPass}{domain}:{userPass![1]}";
             }
         }
 
-
-        private static string? EmailsToUsername(this string? str)
+        private static string? UserPassToUsername(this string? str)
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            static string? Edit(string? line)
+            static string? Edit(string line)
             {
                 if (!IsEmail(line)) return line;
 
                 // Line split
-                string[]? lp = line.SplitByChar(':');
+                string[]? userPass = line.SplitByChar(':');
 
                 // Mail split
-                string[]? ms = lp?[0].SplitByChar('@');
+                string[]? ms = userPass?[0].SplitByChar('@');
 
-                if (lp is null || ms is null) return null;
+                if (userPass is null || ms is null) return null;
 
-                // Length of first index without an email + delimiter + the second index length.
-                StringBuilder sb = new(ms[0].Length + 1 + lp[1].Length);
-
-                sb.AppendFormat(ms[0] + lp[1]);
-
-                return sb.ToString();
+                return $"{ms[0]}{userPass[1]}";
             }
         }
 
         internal static string? AppendToEnd(this string? str, string append)
         {
             return CheckFormat(str) ? Edit(str!) : null;
+            string Edit(string line) => $"{line}{append}";
+        }
 
-            string Edit(string line)
+        internal static string? MailUserAppend(this string? str, string append)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            string? Edit(string line)
             {
-                return $"{line}{append}";
+                if (!IsEmail(line)) return line;
+
+                string[]? userPass = line.SplitByChar(':');
+                string[]? ms       = userPass?[0].SplitByChar('@');
+
+                if (userPass is null || ms is null) return null;
+
+                return $"{ms[0]}{append}{ms[1]}:{userPass[1]}";
+            }
+        }
+
+        internal static string? ToLowerCase(this string? str)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            static string Edit(string line) => line.ToLower();
+        }
+
+        internal static string? ToUpperCase(this string? str)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            static string Edit(string line) => line.ToUpper();
+        }
+
+        internal static string? SwapPassCaseFirstLetter(this string? str)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            static string Edit(string line)
+            {
+                string[]? userPass = line.SplitByChar(':');
+                char[]    a        = userPass![1].ToCharArray();
+                a[0] = char.IsUpper(a[0]) ? a[0] = char.ToUpper(a[0]) : char.ToLower(a[0]);
+                return new string($"{userPass[0]}:{a}");
+            }
+        }
+
+        internal static string? SwapPassNumbersToUser(this string? str)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            static string Edit(string line)
+            {
+                string[]? userPass = line.SplitByChar(':');
+                // If password does not contain a number return.
+                if (userPass![1].Any(static x => !char.IsDigit(x))) return line;
+
+                StringBuilder sb = new(userPass[1].Length);
+                foreach (char number in userPass[1].Where(char.IsDigit))
+                {
+                    sb.Append(number);
+                }
+
+                if (!IsEmail(userPass[0])) return new string($"{userPass[0]}{sb}:{userPass[1]}");
+
+                // If email username.
+                string[] ms = userPass[0].SplitByChar('@')!;
+                return new string($"{ms[0]}{sb}{ms[1]}:{userPass[1]}");
+            }
+        }
+
+        internal static string? SwapUserNumbersToPass(this string? str)
+        {
+            return CheckFormat(str) ? Edit(str!) : null;
+
+            static string? Edit(string line)
+            {
+                string[]? userPass = line.SplitByChar(':');
+                // If username does not contain a number return.
+                if (userPass![0].Any(static x => !char.IsDigit(x))) return line;
+
+                StringBuilder sb = new(userPass[0].Length);
+                foreach (char number in userPass[0].Where(char.IsDigit))
+                {
+                    sb.Append(number);
+                }
+
+                return new string($"{userPass[0]}:{userPass[1]}{sb}");
             }
         }
     }
