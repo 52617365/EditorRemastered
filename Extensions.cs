@@ -186,6 +186,5 @@ namespace Project
                 return new string($"{userPass[0]}:{userPass[1]}{sb}");
             }
         }
-
     }
 }
