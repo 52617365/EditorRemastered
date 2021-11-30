@@ -79,7 +79,7 @@ namespace Project
     internal static class GetDomainList
     {
         internal static IEnumerable<string> Domains() =>
-            new string[]
+            new[]
             {
                 "123.com",
                 "126.com",

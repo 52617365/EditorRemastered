@@ -54,7 +54,7 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str) : null;
 
-            static string? Edit(string line)
+            static string Edit(string line)
             {
                 StringBuilder sb = new(line.Length);
                 foreach (char c in line.Where(static c => !char.IsDigit(c)))
