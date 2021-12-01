@@ -38,44 +38,13 @@ namespace Project
             static string Edit(string line)
             {
                 StringBuilder sb = new(line.Length);
-                foreach (char ch in line.Where(static c =>
-                                                   !char.IsSymbol(c)
-                                                   &&
-                                                   !char.IsPunctuation(c)))
+
+                for (var i = 0; i < line.Length; i++)
                 {
-                    sb.Append(ch);
-                }
-
-                return sb.ToString();
-            }
-        }
-
-        internal static string? RemoveNumbers(this string str)
-        {
-            return CheckFormat(str) ? Edit(str) : null;
-
-            static string Edit(string line)
-            {
-                StringBuilder sb = new(line.Length);
-                foreach (char c in line.Where(static c => !char.IsDigit(c)))
-                {
-                    sb.Append(c);
-                }
-
-                return sb.ToString();
-            }
-        }
-
-        internal static string? RemoveLetters(this string str)
-        {
-            return CheckFormat(str) ? Edit(str) : null;
-
-            static string Edit(string line)
-            {
-                StringBuilder sb = new(line.Length);
-                foreach (char c in line.Where(static c => !char.IsLetter(c)))
-                {
-                    sb.Append(c);
+                    if (!char.IsSymbol(line[i]) && !char.IsPunctuation(line[i]))
+                    {
+                        sb.Append(line[i]);
+                    }
                 }
 
                 return sb.ToString();
@@ -101,7 +70,7 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            static string? Edit(string line)
+            static string Edit(string line)
             {
                 if (!IsEmail(line)) return line;
 
@@ -111,9 +80,7 @@ namespace Project
                 // Mail split
                 string?[]? ms = userPass?[0].SplitByChar('@');
 
-                if (userPass is null || ms is null) return null;
-
-                return new string($"{ms[0]}{userPass[1]}");
+                return new string($"{ms![0]}{userPass![1]}");
             }
         }
 
@@ -127,16 +94,14 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            string? Edit(string line)
+            string Edit(string line)
             {
                 if (!IsEmail(line)) return line;
 
                 string?[]? userPass = line.SplitByChar(':');
                 string?[]? ms       = userPass?[0].SplitByChar('@');
 
-                if (userPass is null || ms is null) return null;
-
-                return new string($"{ms[0]}{append}{ms[1]}:{userPass[1]}");
+                return new string($"{ms![0]}{append}{ms[1]}:{userPass![1]}");
             }
         }
 
@@ -158,12 +123,11 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            static string? Edit(string line)
+            static string Edit(string line)
             {
                 string?[]? userPass = line.SplitByChar(':');
-                if (userPass is null) return null;
 
-                char[] a = userPass[1]!.ToCharArray();
+                char[] a = userPass![1]!.ToCharArray();
                 a[0] = char.IsUpper(a[0]) ? a[0] = char.ToUpper(a[0]) : char.ToLower(a[0]);
                 return new string($"{userPass[0]}:{a}");
             }
@@ -173,24 +137,20 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            static string? Edit(string line)
+            static string Edit(string line)
             {
                 string?[]? userPass = line.SplitByChar(':');
-                if (userPass is null) return null;
                 // If password does not contain a number return.
-                if (userPass[1]!.Any(static x => !char.IsDigit(x))) return line;
+                if (!HasNumbers(userPass![1]!)) return line;
 
-                StringBuilder sb = new(userPass[1]!.Length);
-                foreach (char number in userPass[1]!.Where(char.IsDigit))
-                {
-                    sb.Append(number);
-                }
+                string numbers = GetNumbers(userPass[1]!);
 
-                if (!IsEmail(userPass[0]!)) return new string($"{userPass[0]}{sb}:{userPass[1]}");
+
+                if (!IsEmail(userPass[0]!)) return new string($"{userPass[0]}{numbers}:{userPass[1]}");
 
                 // If email username.
                 string[] ms = userPass[0].SplitByChar('@')!;
-                return new string($"{ms[0]}{sb}{ms[1]}:{userPass[1]}");
+                return new string($"{ms[0]}{numbers}{ms[1]}:{userPass[1]}");
             }
         }
 
@@ -198,21 +158,16 @@ namespace Project
         {
             return CheckFormat(str) ? Edit(str!) : null;
 
-            static string? Edit(string line)
+            static string Edit(string line)
             {
+                // If line has no numbers, return.
+                if (!HasNumbers(line)) return line;
+
                 string?[]? userPass = line.SplitByChar(':');
-                if (userPass is null) return null;
 
-                // If username does not contain a number return.
-                if (userPass[0]!.Any(static x => !char.IsDigit(x))) return line;
 
-                StringBuilder sb = new(userPass[0]!.Length);
-                foreach (char number in userPass[0]!.Where(char.IsDigit))
-                {
-                    sb.Append(number);
-                }
-
-                return new string($"{userPass[0]}:{userPass[1]}{sb}");
+                return new
+                    string($"{GetLetters(userPass![0]!)}:{userPass[1]}{GetNumbers(userPass[0]!)}");
             }
         }
 
@@ -222,15 +177,8 @@ namespace Project
 
             string Edit(string line)
             {
-                string?[]? splitCombo    = line.SplitByChar(':');
-                string     extractedPass = Extract(splitCombo![1]).ToString();
-                return new string($"{splitCombo[0]}:{extractedPass}");
-            }
-
-            ReadOnlySpan<char> Extract(string? line)
-            {
-                ReadOnlySpan<char> extractedString = line.AsSpan()[length..];
-                return extractedString;
+                string?[]? splitCombo = line.SplitByChar(':');
+                return new string($"{splitCombo![0]}:{splitCombo[1]![..length]}");
             }
         }
 
@@ -240,7 +188,7 @@ namespace Project
 
             static string? Edit(string line)
             {
-                if (line.Any(static x => !char.IsDigit(x))) return line;
+                if (!HasNumbers(line)) return line;
 
                 return IsEmail(line) ? MailSwap(line) : UserSwap(line);
             }
@@ -249,11 +197,9 @@ namespace Project
             {
                 string?[]? splitByColon = line.SplitByChar(':');
                 string?[]? splitEmail   = splitByColon?[0].SplitByChar('@');
-                if (splitByColon is null || splitEmail == null) return null;
                 // Just swapping numbers from the mail into the password and vica verca.
-                // I realise it could be faster (LINQ is slow and there is a lot of allocations) AND easier to read.
                 var swappedCombo
-                    = $"{GetLetters(splitEmail[0]!)}{GetNumbers(splitByColon[1]!)}{GetLetters(splitEmail[1]!)}:{GetLetters(splitByColon[1]!)}{GetNumbers(splitByColon[0]!)}";
+                    = $"{GetLetters(splitEmail![0]!)}{GetNumbers(splitByColon![1]!)}{GetLetters(splitEmail[1]!)}:{GetLetters(splitByColon[1]!)}{GetNumbers(splitByColon[0]!)}";
                 return swappedCombo;
             }
 
@@ -262,34 +208,52 @@ namespace Project
                 string?[]? splitByColon = line.SplitByChar(':');
                 if (splitByColon is null) return null;
                 // Just swapping numbers from the user into the password and vica verca.
-                // I realise it could be faster (LINQ is slow and there is a lot of allocations) AND easier to read.
                 var swappedCombo
                     = $"{GetLetters(splitByColon[0]!)}{GetNumbers(splitByColon[1]!)}:{GetLetters(splitByColon[1]!)}{GetNumbers(splitByColon[0]!)}";
                 return swappedCombo;
             }
+        }
 
-            static string GetLetters(string line)
+        private static string GetLetters(string line)
+        {
+            StringBuilder sb = new(line.Length);
+            for (var i = 0; i < line.Length; i++)
             {
-                StringBuilder sb = new();
-                foreach (char c in line.Where(static x => !char.IsDigit(x)))
+                if (char.IsLetter(line[i]))
                 {
-                    sb.Append(c);
+                    sb.Append(line[i]);
                 }
-
-                return sb.ToString();
             }
 
+            return sb.ToString();
+        }
 
-            static IEnumerable<char> GetNumbers(string line)
+
+        private static string GetNumbers(string line)
+        {
+            StringBuilder sb = new(line.Length);
+            for (var i = 0; i < line.Length; i++)
             {
-                StringBuilder sb = new();
-                foreach (char c in line.Where(char.IsDigit))
+                if (char.IsDigit(line[i]))
                 {
-                    sb.Append(c);
+                    sb.Append(line[i]);
                 }
-
-                return sb.ToString();
             }
+
+            return sb.ToString();
+        }
+
+        private static bool HasNumbers(string line)
+        {
+            for (var i = 0; i < line.Length; i++)
+            {
+                if (char.IsDigit(line[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
